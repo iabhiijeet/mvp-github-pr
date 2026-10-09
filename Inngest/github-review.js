@@ -5,8 +5,9 @@ export const githubPrReviewer = inngest.createFunction(
   { id: "github-pr-reviewer", triggers: [{ event: "github/pr.reviewer" }] },
   async ({ event, step }) => {
     const { owner, repo, pull_number } = event.data;
+    let pullRequestInfo;
     try {
-      const pullRequestInfo = await step.run("fetch the data of pr", async () => {
+      pullRequestInfo = await step.run("fetch the data of pr", async () => {
         
         const { data } = await octokit.pulls.get({
           owner, repo, pull_number
@@ -23,7 +24,7 @@ export const githubPrReviewer = inngest.createFunction(
       })
     }
     catch (err) {
-      return null;
+      return { message: "Failed to fetch PR info", status: "500", error: err.message };
     }
 
     if(!pullRequestInfo) {
@@ -58,6 +59,7 @@ export const githubPrReviewer = inngest.createFunction(
       }))
     })
 
+    return { changes, ...pullRequestInfo };
   },
 );
 
